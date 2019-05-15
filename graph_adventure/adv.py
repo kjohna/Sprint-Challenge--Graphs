@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from world import World
+import queue
 
 import random
 
@@ -21,8 +22,58 @@ player = Player("Name", world.startingRoom)
 
 
 # FILL THIS IN
-traversalPath = ['n', 's']
+# traversalPath = ['n', 's']
+traversalPath = []
+traversalGraph = {}
+# get exits of current room, update traversalGraph
+exits = player.currentRoom.getExits()
+traversalGraph[world.startingRoom.id] = {}
+for e in exits:
+    traversalGraph[world.startingRoom.id][e] = '?'
+# search traversalGraph for nearest room with unknown exit
+# move there (if necessary)
+# dfs_travel in that direction
 
+# dfs, travel from current position until a room is reached with no unknown exits
+def dfs_travel(roomId):
+    # store roomId for updating traversalGraph after move
+    prevRoom = roomId
+    # get exits of the current room
+    exits = traversalGraph[roomId]
+    # move first unknown direction
+    for e in exits:
+        if traversalGraph[roomId][e] == '?':
+            # move that direction
+            player.travel(e)
+            roomId = player.currentRoom.id
+            # update traversalPath
+            traversalPath.append(e)
+            # update traversalGraph for prevRoom
+            traversalGraph[prevRoom][e] = roomId
+            # get exits of new room
+            exits = player.currentRoom.getExits()
+            # update traversalGraph for current room
+            for e in exits:
+                traversalGraph[roomId][e] = '?'
+    # if no unknown exit is found, call bfs_nearest
+    bfs_nearest()
+
+
+# bfs, look for nearest room among visited rooms with unvisited exits and travel to that room
+def bfs_nearest(roomId):
+    q = queue.Queue()
+    reverse = []
+    reverse.append(traversalPath(len(traversalPath) - 1))
+    q.put(roomId)
+    while not q.empty():
+        room = q.get()
+        for e in traversalGraph[room]:
+            if e == '?':
+                reverse.append(e)
+                return reverse
+            else:
+                q.put(traversalGraph[roomId])
+    
 
 # TRAVERSAL TEST
 visited_rooms = set()
