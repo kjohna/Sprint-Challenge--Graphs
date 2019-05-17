@@ -23,7 +23,6 @@ world.loadGraph(roomGraph)
 world.printRooms()
 player = Player("Name", world.startingRoom)
 
-
 # FILL THIS IN
 # travel in a depth-first fashion from current position until a room is reached with no unknown exits
 def df_travel(roomId, traversalPath, traversalGraph):
@@ -37,38 +36,46 @@ def df_travel(roomId, traversalPath, traversalGraph):
     # track if player has moved, continue to move until impossible
     moved = True
     while moved:
+        possibleExits = []
+        exitChoice = ''
         moved = False
-        # move first unknown direction
+        # gather possible exits
         for e in exits:
             if e in traversalGraph[currentRoom]:
                 if traversalGraph[currentRoom][e] == '?':
-                    # move that direction
-                    prevRoom = currentRoom
-                    player.travel(e)
-                    currentRoom = player.currentRoom.id
-                    # update traversalPath
-                    traversalPath.append(e)
-                    # update traversalGraph for prevRoom
-                    traversalGraph[prevRoom][e] = currentRoom
-                    # if this is a new room, create entry in traversalGraph and update appropriately
-                    if not currentRoom in traversalGraph:
-                        traversalGraph[currentRoom] = {}
-                        # get exits of new room
-                        exits = player.currentRoom.getExits()
-                        for newExit in exits:
-                            if newExit == opposite[e]:
-                                traversalGraph[currentRoom][newExit] = prevRoom
-                            else:
-                                traversalGraph[currentRoom][newExit] = '?'
-                    # otherwise update the existing room with info about how we got here again
-                    else:
-                        traversalGraph[currentRoom][opposite[e]] = prevRoom
-                    # update traversalGraph for current room
-                    # create if doesn't exist
-                    # once player has moved and updated logs,
-                    # set "moved" True and break exit-checking loop
-                    moved = True
-                    break
+                    possibleExits.append(e)
+        # if there are '?' exits:
+        if len(possibleExits):
+            # choose a random direction out of possible exits
+            exitChoice = random.choice(possibleExits)
+        else:
+            # no '?' exits
+            break
+        prevRoom = currentRoom
+        player.travel(exitChoice)
+        currentRoom = player.currentRoom.id
+        # update traversalPath
+        traversalPath.append(exitChoice)
+        # update traversalGraph for prevRoom
+        traversalGraph[prevRoom][exitChoice] = currentRoom
+        # if this is a new room, create entry in traversalGraph and update appropriately
+        if not currentRoom in traversalGraph:
+            traversalGraph[currentRoom] = {}
+            # get exits of new room
+            exits = player.currentRoom.getExits()
+            for newExit in exits:
+                if newExit == opposite[exitChoice]:
+                    traversalGraph[currentRoom][newExit] = prevRoom
+                else:
+                    traversalGraph[currentRoom][newExit] = '?'
+        # otherwise update the existing room with info about how we got here again
+        else:
+            traversalGraph[currentRoom][opposite[exitChoice]] = prevRoom
+        # update traversalGraph for current room
+        # create if doesn't exist
+        # once player has moved and updated logs,
+        # set "moved" True
+        moved = True
     return traversalPath
 
 
@@ -115,29 +122,40 @@ def bfs_nearest(roomId, traversalPath, traversalGraph):
             traversalPath.append(direction)
     return traversalPath
 
+tries = 0
+maxTries = 1000
+leastMoves = 10000
+shortestPath = []
+while tries < maxTries:
+    ### Solving the maze here:
+    traversalPath = []
+    traversalGraph = {}
+    player = Player("Name", world.startingRoom)
+    # get exits of current room, update traversalGraph
+    exits = player.currentRoom.getExits()
+    traversalGraph[player.currentRoom.id] = {}
+    for e in exits:
+        traversalGraph[world.startingRoom.id][e] = '?'
+    travLenStart = 0
+    travLenFinish = 1  # just to get the loop going
+    while travLenStart < travLenFinish:
+        travLenStart = len(traversalPath)
+        # df_travel will look at exits in the room, move to '?'
+        traversalPath = df_travel(
+            player.currentRoom.id, traversalPath, traversalGraph)
+        # if a room is reached with no exits to '?' then
+        # bfs_nearest is called which moves player to nearest room
+        # with a '?' exit. if no rooms have a '?' exit then traversalPath is returned from both with the same length as before and we're done
+        traversalPath = bfs_nearest(
+            player.currentRoom.id, traversalPath, traversalGraph)
+        travLenFinish = len(traversalPath)
+    tries += 1
+    if len(traversalPath) < leastMoves:
+        leastMoves = len(traversalPath)
+        shortestPath = traversalPath
 
-# traversalPath = ['n', 's']
-traversalPath = []
-traversalGraph = {}
-# get exits of current room, update traversalGraph
-exits = player.currentRoom.getExits()
-traversalGraph[player.currentRoom.id] = {}
-for e in exits:
-    traversalGraph[world.startingRoom.id][e] = '?'
-travLenStart = 0
-travLenFinish = 1  # just to get the loop going
-while travLenStart < travLenFinish:
-    travLenStart = len(traversalPath)
-    # df_travel will look at exits in the room, move to '?'
-    traversalPath = df_travel(
-        player.currentRoom.id, traversalPath, traversalGraph)
-    # if a room is reached with no exits to '?' then
-    # bfs_nearest is called which moves player to nearest room
-    # with a '?' exit. if no rooms have a '?' exit then traversalPath is returned from both with the same length as before and we're done
-    traversalPath = bfs_nearest(
-        player.currentRoom.id, traversalPath, traversalGraph)
-    travLenFinish = len(traversalPath)
-
+print(f"after {maxTries} tries, least moves: {leastMoves}, shortest path: \n{shortestPath}")
+traversalPath = shortestPath
 
 # TRAVERSAL TEST
 visited_rooms = set()
