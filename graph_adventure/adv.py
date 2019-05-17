@@ -122,10 +122,13 @@ def bfs_nearest(roomId, traversalPath, traversalGraph):
             traversalPath.append(direction)
     return traversalPath
 
+with open('leastTracker.txt', 'r') as f:
+    leastMoves = int(f.readline())
+    shortestPath = list(f.readline().strip("['").strip("']\n").split("', '"))
+    print(shortestPath)
 tries = 0
-maxTries = 1000
-leastMoves = 10000
-shortestPath = []
+maxTries = 100
+# modify this to be while 1 to try forever
 while tries < maxTries:
     ### Solving the maze here:
     traversalPath = []
@@ -153,6 +156,17 @@ while tries < maxTries:
     if len(traversalPath) < leastMoves:
         leastMoves = len(traversalPath)
         shortestPath = traversalPath
+        with open('leastTracker.txt', 'r') as f:
+            contents = f.readlines()
+        contents.insert(0, str(leastMoves))
+        contents.insert(1, '\n')
+        contents.insert(2, str(shortestPath))
+        contents.insert(3, '\n')
+        with open('leastTracker.txt', 'w') as f:
+            contents = "".join(contents)
+            f.write(contents)
+    if tries % 10 == 0:
+        print(f"attempt {tries}, current min = {leastMoves} \n")
 
 print(f"after {maxTries} tries, least moves: {leastMoves}, shortest path: \n{shortestPath}")
 traversalPath = shortestPath
