@@ -127,7 +127,7 @@ with open('leastTracker.txt', 'r') as f:
     shortestPath = list(f.readline().strip("['").strip("']\n").split("', '"))
     print(shortestPath)
 tries = 0
-maxTries = 100
+maxTries = 10000
 # modify this to be while 1 to try forever
 while tries < maxTries:
     ### Solving the maze here:
@@ -165,7 +165,7 @@ while tries < maxTries:
         with open('leastTracker.txt', 'w') as f:
             contents = "".join(contents)
             f.write(contents)
-    if tries % 10 == 0:
+    if tries % 1000 == 0:
         print(f"attempt {tries}, current min = {leastMoves} \n")
 
 print(f"after {maxTries} tries, least moves: {leastMoves}, shortest path: \n{shortestPath}")
