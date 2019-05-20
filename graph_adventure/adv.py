@@ -25,7 +25,7 @@ player = Player("Name", world.startingRoom)
 
 # FILL THIS IN
 # travel in a depth-first fashion from current position until a room is reached with no unknown exits
-def df_travel(roomId, traversalPath, traversalGraph):
+def dfTravel(roomId, traversalPath, traversalGraph):
     currentRoom = roomId
     # store roomId for updating traversalGraph after move
     prevRoom = roomId
@@ -80,7 +80,7 @@ def df_travel(roomId, traversalPath, traversalGraph):
 
 
 # bfs of traversalGraph for room nearest to "roomId" with unvisited exits, travel to that room and return updated traversalPath
-def bfs_nearest(roomId, traversalPath, traversalGraph):
+def bfsNearest(roomId, traversalPath, traversalGraph):
     # put exits to check in traversalGraph in the queue
     q = queue.Queue()
     q.put(roomId)
@@ -127,7 +127,7 @@ with open('leastTracker.txt', 'r') as f:
     shortestPath = list(f.readline().strip("['").strip("']\n").split("', '"))
     print(shortestPath)
 tries = 0
-maxTries = 10000
+maxTries = 1000
 # modify this to be while 1 to try forever
 while tries < maxTries:
     ### Solving the maze here:
@@ -143,13 +143,13 @@ while tries < maxTries:
     travLenFinish = 1  # just to get the loop going
     while travLenStart < travLenFinish:
         travLenStart = len(traversalPath)
-        # df_travel will look at exits in the room, move to '?'
-        traversalPath = df_travel(
+        # dfTravel will look at exits in the room, move to '?'
+        traversalPath = dfTravel(
             player.currentRoom.id, traversalPath, traversalGraph)
         # if a room is reached with no exits to '?' then
-        # bfs_nearest is called which moves player to nearest room
+        # bfsNearest is called which moves player to nearest room
         # with a '?' exit. if no rooms have a '?' exit then traversalPath is returned from both with the same length as before and we're done
-        traversalPath = bfs_nearest(
+        traversalPath = bfsNearest(
             player.currentRoom.id, traversalPath, traversalGraph)
         travLenFinish = len(traversalPath)
     tries += 1
@@ -165,7 +165,7 @@ while tries < maxTries:
         with open('leastTracker.txt', 'w') as f:
             contents = "".join(contents)
             f.write(contents)
-    if tries % 1000 == 0:
+    if tries % 100 == 0:
         print(f"attempt {tries}, current min = {leastMoves} \n")
 
 print(f"after {maxTries} tries, least moves: {leastMoves}, shortest path: \n{shortestPath}")
